@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Camino al 100% · Mi número</title>
+<meta name="description" content="Avance de cuota FY27: plan, gap, pipeline y simulador de escenarios.">
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#070c17; --card:#101a2e; --card2:#14203a; --line:#1e2c48;
+    --txt:#e8eef9; --mut:#8ea2c4; --soft:#0a1220;
+    --blue:#00a1e0; --green:#2fd17a; --amber:#ffb648; --violet:#9b7bff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    background:
+      radial-gradient(1200px 600px at 15% -10%, #13243f 0%, transparent 60%),
+      radial-gradient(1000px 500px at 90% 0%, #0c2a44 0%, transparent 55%),
+      var(--bg);
+    background-attachment:fixed;
+    color:var(--txt);-webkit-font-smoothing:antialiased;padding:0 0 70px;
+  }
+  .wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+  header{padding:38px 0 22px}
+  .eyebrow{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:800}
+  h1{font-size:34px;line-height:1.1;margin:8px 0 8px;letter-spacing:-.025em}
+  h1 span{background:linear-gradient(90deg,var(--green),var(--blue));-webkit-background-clip:text;background-clip:text;color:transparent}
+  .sub{color:var(--mut);font-size:14.5px;max-width:620px}
+  h2{font-size:18px;margin:0 0 3px;letter-spacing:-.01em}
+  .h2sub{color:var(--mut);font-size:12.5px;margin-bottom:14px}
+  section{margin-top:34px}
+
+  .card{background:linear-gradient(160deg,var(--card2),var(--card));border:1px solid var(--line);border-radius:14px;padding:18px}
+  .grid{display:grid;gap:13px}
+  .g4{grid-template-columns:repeat(4,1fr)}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  .g2{grid-template-columns:1.05fr .95fr}
+
+  /* HERO */
+  .hero{display:grid;grid-template-columns:210px 1fr;gap:26px;align-items:center}
+  .ring{position:relative;width:200px;height:200px}
+  .ring svg{transform:rotate(-90deg)}
+  .ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .ringtxt b{font-size:36px;letter-spacing:-.03em;line-height:1}
+  .ringtxt small{color:var(--mut);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;margin-top:5px}
+  .bars{display:flex;flex-direction:column;gap:14px}
+  .track{height:36px;background:var(--soft);border:1px solid var(--line);border-radius:9px;overflow:hidden;display:flex}
+  .seg{height:100%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#04121f;white-space:nowrap;transition:width .6s cubic-bezier(.2,.8,.2,1)}
+  .s-closed{background:linear-gradient(90deg,#2fd17a,#5ce6a0)}
+  .s-commit{background:linear-gradient(90deg,#00a1e0,#4fc8f5)}
+  .s-best{background:linear-gradient(90deg,#9b7bff,#bda4ff)}
+  .s-pipe{background:repeating-linear-gradient(45deg,#2a3a5c,#2a3a5c 6px,#33456b 6px,#33456b 12px);color:#a9bde0}
+  .legend{display:flex;flex-wrap:wrap;gap:15px;font-size:12px;color:var(--mut)}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px;vertical-align:1px}
+
+  .kpi b{display:block;font-size:25px;letter-spacing:-.02em;margin-top:5px}
+  .kpi .lab{font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:800}
+  .kpi .note{font-size:12px;color:var(--mut);margin-top:5px}
+  .up{color:var(--green)}.warn{color:var(--amber)}
+
+  /* escenarios */
+  .sc{display:flex;align-items:center;gap:13px;padding:12px 0;border-bottom:1px dashed var(--line)}
+  .sc:last-child{border:0}
+  .sc .name{width:225px;font-size:13px;font-weight:600;flex:none}
+  .sc .bar{flex:1;height:13px;background:var(--soft);border-radius:7px;overflow:hidden}
+  .sc .fill{height:100%;border-radius:7px}
+  .sc .val{width:120px;text-align:right;font-size:13px;font-variant-numeric:tabular-nums;flex:none}
+  .sc .pct{width:60px;text-align:right;font-weight:800;font-size:13px;flex:none}
+
+  /* funnel */
+  .fn{display:flex;flex-direction:column;gap:9px}
+  .fnrow{display:flex;align-items:center;gap:12px;font-size:13px}
+  .fnrow .lb{width:185px;flex:none;color:var(--mut)}
+  .fnbar{height:25px;border-radius:6px;display:flex;align-items:center;padding:0 9px;font-size:11px;font-weight:800;color:#04121f;min-width:40px}
+
+  /* timeline */
+  .tl{display:flex;align-items:flex-end;gap:11px;height:170px;margin-top:6px}
+  .tlc{flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;height:100%;justify-content:flex-end}
+  .tlb{width:100%;border-radius:7px 7px 3px 3px;background:linear-gradient(180deg,#00a1e0,#0d5f88);position:relative}
+  .tlb span{position:absolute;top:-20px;left:0;right:0;text-align:center;font-size:11px;font-weight:800;color:var(--txt)}
+  .tlc small{color:var(--mut);font-size:11px}
+
+  /* tabla */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:10px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);padding:9px 10px;border-bottom:1px solid var(--line);position:sticky;top:0;background:#101a2e;z-index:1}
+  td{padding:9px 10px;border-bottom:1px solid rgba(30,44,72,.6)}
+  tr:hover td{background:rgba(0,161,224,.07)}
+  .num{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+  .tag{display:inline-block;padding:3px 9px;border-radius:20px;font-size:10px;font-weight:800}
+  .t-Commit{background:rgba(0,161,224,.16);color:#6fd3fb;border:1px solid rgba(0,161,224,.35)}
+  .t-Best{background:rgba(155,123,255,.16);color:#c3b0ff;border:1px solid rgba(155,123,255,.35)}
+  .t-Pipeline{background:rgba(142,162,196,.12);color:#a9bde0;border:1px solid rgba(142,162,196,.25)}
+  input[type=checkbox]{width:16px;height:16px;accent-color:var(--green);cursor:pointer}
+  .tblwrap{max-height:500px;overflow:auto;border-radius:11px}
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:13px;align-items:center}
+  button{background:var(--card2);color:var(--txt);border:1px solid var(--line);padding:8px 13px;border-radius:9px;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+  button:hover{border-color:var(--blue);color:#fff}
+  .simbox{background:linear-gradient(135deg,rgba(47,209,122,.10),rgba(0,161,224,.07));border-color:rgba(47,209,122,.28)}
+  .simnum{font-size:32px;font-weight:800;letter-spacing:-.02em;margin-top:4px}
+  .mini{font-size:12px;color:var(--mut)}
+  ul.rec{list-style:none;display:flex;flex-direction:column;gap:11px}
+  ul.rec li{display:flex;gap:11px;font-size:13.5px;line-height:1.5;color:#cfdcef}
+  ul.rec i{flex:none;width:22px;height:22px;border-radius:7px;background:rgba(0,161,224,.16);color:var(--blue);font-style:normal;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center}
+  footer{margin-top:44px;color:var(--mut);font-size:12px;text-align:center}
+
+  @media(max-width:900px){.g4,.g3,.g2{grid-template-columns:1fr 1fr}.hero{grid-template-columns:1fr;justify-items:center}h1{font-size:28px}.sc .name{width:130px}.sc .val{width:92px}.fnrow .lb{width:120px}}
+  @media(max-width:560px){.g4,.g3,.g2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="eyebrow">FY27 · Mi número</div>
+  <h1>Camino al <span>100%</span></h1>
+  <p class="sub">Dónde vas hoy, qué falta y con qué cuentas para cerrarlo. Marca deals en la tabla para simular escenarios en vivo.</p>
+</header>
+
+<div class="card hero">
+  <div class="ring">
+    <svg width="200" height="200" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="86" fill="none" stroke="#12203a" stroke-width="17"/>
+      <circle id="ringArc" cx="100" cy="100" r="86" fill="none" stroke="url(#gr)" stroke-width="17" stroke-linecap="round"
+              stroke-dasharray="540.4" stroke-dashoffset="540.4" style="transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)"/>
+      <defs><linearGradient id="gr" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#2fd17a"/><stop offset="100%" stop-color="#00a1e0"/>
+      </linearGradient></defs>
+    </svg>
+    <div class="ringtxt"><b id="ringPct">21.3%</b><small>del plan</small></div>
+  </div>
+  <div class="bars">
+    <div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-bottom:8px;gap:10px;flex-wrap:wrap">
+        <span>Cerrado + pipeline abierto vs. plan de <b style="color:var(--txt)">$841.4K</b></span>
+        <span>Cobertura del gap: <b class="up">2.25x</b></span>
+      </div>
+      <div class="track" id="stackTrack"></div>
+    </div>
+    <div class="legend">
+      <span><i class="dot" style="background:#2fd17a"></i>Cerrado $179.3K</span>
+      <span><i class="dot" style="background:#00a1e0"></i>Commit $135.3K</span>
+      <span><i class="dot" style="background:#9b7bff"></i>Best Case $179.4K</span>
+      <span><i class="dot" style="background:#33456b"></i>Pipeline $1,176.7K</span>
+      <span style="margin-left:auto">Escala: 0 → $1,670.7K (198% del plan)</span>
+    </div>
+  </div>
+</div>
+
+<section>
+  <div class="grid g4">
+    <div class="card kpi"><div class="lab">Plan total</div><b>$841.4K</b><div class="note">179.3 ÷ 21.31%</div></div>
+    <div class="card kpi"><div class="lab">Ya cerrado</div><b class="up">$179.3K</b><div class="note">21.31% del plan</div></div>
+    <div class="card kpi"><div class="lab">Te falta</div><b class="warn">$662.1K</b><div class="note">78.69% restante</div></div>
+    <div class="card kpi"><div class="lab">Pipeline abierto</div><b>$1,491.4K</b><div class="note">24 deals · cobertura 2.25x</div></div>
+  </div>
+</section>
+
+<section>
+  <h2>Escenarios: ¿hasta dónde llegas?</h2>
+  <p class="h2sub">Acumulado sobre el plan de $841.4K según qué tanto del pipeline convierte.</p>
+  <div class="card" id="scen"></div>
+</section>
+
+<section class="grid g2">
+  <div class="card">
+    <h2>Pipeline por etapa</h2>
+    <p class="h2sub">Dónde está concentrado el monto abierto.</p>
+    <div class="fn" id="funnel"></div>
+    <p class="mini" style="margin-top:13px">⚠️ El <b style="color:var(--amber)">70%</b> del pipeline abierto sigue en etapa 02 (Determining Problem) — es el riesgo principal del plan.</p>
+  </div>
+  <div class="card">
+    <h2>Cierres por mes</h2>
+    <p class="h2sub">Monto abierto con fecha de cierre en cada mes.</p>
+    <div class="tl" id="timeline"></div>
+    <p class="mini" style="margin-top:13px">Ene-27 concentra <b style="color:var(--txt)">$613.8K</b> (41%). Si esos deals no se adelantan, el número depende de un solo mes.</p>
+  </div>
+</section>
+
+<section>
+  <h2>Top cuentas por monto abierto</h2>
+  <p class="h2sub">Las 6 primeras concentran $904.2K — el 61% del pipeline.</p>
+  <div class="card"><div class="fn" id="accts"></div></div>
+</section>
+
+<section>
+  <h2>Simulador · arma tu camino al 100%</h2>
+  <p class="h2sub">Marca los deals que crees que vas a cerrar. El contador se actualiza al instante.</p>
+  <div class="grid g3" style="margin-bottom:15px">
+    <div class="card simbox"><div class="lab" style="font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:800">Proyección</div>
+      <div class="simnum" id="simTotal">$179.3K</div><div class="mini" id="simPct">21.3% del plan</div></div>
+    <div class="card"><div class="lab" style="font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:800">Falta para el 100%</div>
+      <div class="simnum warn" id="simGap">$662.1K</div><div class="mini" id="simGapPct">78.7% pendiente</div></div>
+    <div class="card"><div class="lab" style="font-size:10.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--mut);font-weight:800">Deals seleccionados</div>
+      <div class="simnum" id="simCount">0</div><div class="mini">de 24 abiertos</div></div>
+  </div>
+  <div class="toolbar">
+    <button onclick="preset('none')">Limpiar</button>
+    <button onclick="preset('commit')">Solo Commit</button>
+    <button onclick="preset('cb')">Commit + Best Case</button>
+    <button onclick="preset('q3q4')">Cierres 2026</button>
+    <button onclick="preset('min')">Camino mínimo al 100%</button>
+    <button onclick="preset('all')">Todo el pipeline</button>
+    <span class="mini" style="margin-left:auto" id="filterNote"></span>
+  </div>
+  <div class="card" style="padding:5px">
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th style="width:34px"></th><th>Deal</th><th>Cuenta</th><th class="num">Monto</th><th>Etapa</th><th>Categoría</th><th>Cierre</th></tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Lectura rápida</h2>
+  <div class="card">
+    <ul class="rec">
+      <li><i>1</i><span><b>Commit + Best Case te deja en 58.7%.</b> Aun ganando todo lo que ya está en etapa 04 y 05, faltan <b class="warn">$347.4K</b>. El 100% no se resuelve con lo avanzado: se resuelve en etapa 02.</span></li>
+      <li><i>2</i><span><b>Necesitas ~29.5% de win rate sobre el pipeline temprano</b> ($1,176.7K en etapas 02–03) para cerrar ese gap.</span></li>
+      <li><i>3</i><span><b>Forecast ponderado hoy: ~$588K (69.9%).</b> Usando 90% Commit / 50% Best Case / 30% etapa 03 / 15% etapa 02. Delta contra el plan: ~$253K.</span></li>
+      <li><i>4</i><span><b>Q3 cierra con $135.3K en Commit</b> (Helado Sarita + Plus Technologies) al 30-sep. Protegerlos es lo más rentable de esta semana.</span></li>
+      <li><i>5</i><span><b>Grandbay vale $179.4K en dos actos.</b> Tu palanca individual más grande fuera de Commit — mover ANDINA (30-oct) de 04 a 05 cambia la foto completa.</span></li>
+      <li><i>6</i><span><b>Riesgo de concentración:</b> 6 cuentas = 61% del pipeline y Ene-27 = 41% del monto. Vale adelantar fechas donde sea real y sumar 2–3 deals de ticket medio.</span></li>
+    </ul>
+  </div>
+</section>
+
+<footer>Datos a 20-sep-2026 · montos en USD · plan derivado de 179.3 / 21.31%</footer>
+</div>
+
+<script>
+const PLAN=841389, CLOSED=179300;
+const D=[
+ {n:"MC Loyalty - Helado Sarita - Q3",a:"Helado Sarita",m:127502,s:"05 - Negotiating $$ & Mutual Plan",c:"Commit",d:"2026-09-30"},
+ {n:"Plus Technologies Guatemala - Add-on",a:"Plus Technologies Guatemala",m:7805,s:"05 - Negotiating $$ & Mutual Plan",c:"Commit",d:"2026-09-30"},
+ {n:"Child Grandbay ANDINA Act 1",a:"GRANDBAY PAPELERA INTERNACIONAL",m:130953,s:"04 - Confirming Value With Power",c:"Best Case",d:"2026-10-30"},
+ {n:"Child Grandbay CARICOM act 2 Sales&Service",a:"GRANDBAY PAPELERA INTERNACIONAL",m:48438,s:"04 - Confirming Value With Power",c:"Best Case",d:"2027-01-30"},
+ {n:"RFP Core banco antigua Q4",a:"Banco de Antigua",m:80000,s:"03 - Validating Benefits & Value",c:"Pipeline",d:"2027-01-29"},
+ {n:"Core + DHL GT 25",a:"DHL de Guatemala",m:30000,s:"03 - Validating Benefits & Value",c:"Pipeline",d:"2026-10-30"},
+ {n:"Inmobiliaria La Roca (+20)",a:"Inmobiliaria La Roca",m:29400,s:"03 - Validating Benefits & Value",c:"Pipeline",d:"2026-12-31"},
+ {n:"CG - Grupo Solid - RFP 2027",a:"Grupo Solid SA",m:150066,s:"02 - Determining Problem",c:"Pipeline",d:"2027-01-29"},
+ {n:"MC ENG - Alimentos Ideal - NL (BDR)",a:"Alimentos Ideal, S.A.",m:135274,s:"02 - Determining Problem",c:"Pipeline",d:"2027-01-29"},
+ {n:"MC - Elektra Guatemala SA - NB [BDR]",a:"Elektra de Guatemala",m:132000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-10-30"},
+ {n:"MC - Vana Q4",a:"Vana, S.A.",m:100000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-12-31"},
+ {n:"SLK - Grupo Alza NB Enterprise+ Q4",a:"Grupo Alza",m:75000,s:"02 - Determining Problem",c:"Pipeline",d:"2027-01-29"},
+ {n:"SFA/SC - Econoparts [BDR PS] #NB",a:"EconoParts",m:70000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-11-30"},
+ {n:"MC-Solid Intelligence",a:"Grupo Solid SA",m:50000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-12-31"},
+ {n:"RFP MKT banco antigua Q4",a:"Banco de Antigua",m:50000,s:"02 - Determining Problem",c:"Pipeline",d:"2027-01-29"},
+ {n:"Loyalty y MKT - Plus TI",a:"Plus Technologies Guatemala",m:42000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-10-20"},
+ {n:"Grupo Zeta - SC Contact Center #NB",a:"Grupo Zeta Gas",m:40001,s:"02 - Determining Problem",c:"Pipeline",d:"2026-10-31"},
+ {n:"OCEANA - NB - BDR",a:"Oceana GT",m:40000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-10-30"},
+ {n:"EEGSA - AF - RFI",a:"EEGSA",m:30000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-12-30"},
+ {n:"EEGSA - NB - SALES X15 - CS",a:"EEGSA",m:30000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-12-30"},
+ {n:"Slk - Grupo Saf - Q4",a:"Sistemas, Admin y Finanzas",m:30000,s:"02 - Determining Problem",c:"Pipeline",d:"2027-01-29"},
+ {n:"MC - Econoparts - NB [BDR]",a:"EconoParts",m:30000,s:"02 - Determining Problem",c:"Pipeline",d:"2027-01-15"},
+ {n:"Vana - Upgrade Tableau [BDR PS]",a:"Vana, S.A.",m:18000,s:"02 - Determining Problem",c:"Pipeline",d:"2026-11-30"},
+ {n:"[Reseller Lead] Hospital El Pilar",a:"Hospital El Pilar",m:15000,s:"02 - Determining Problem",c:"Pipeline",d:"2027-01-29"}
+];
+const K=v=>"$"+(v/1000).toFixed(1)+"K";
+const sum=a=>a.reduce((t,x)=>t+x.m,0);
+const byCat=c=>sum(D.filter(d=>d.c===c));
+const COMMIT=byCat("Commit"), BEST=byCat("Best Case"), PIPE=byCat("Pipeline"), OPEN=sum(D);
+const MAXSCALE=CLOSED+OPEN, R=86, C=2*Math.PI*R;
+
+(function(){
+  const segs=[["s-closed",CLOSED],["s-commit",COMMIT],["s-best",BEST],["s-pipe",PIPE]];
+  document.getElementById("stackTrack").innerHTML=segs.map(([c,v])=>
+    `<div class="seg ${c}" style="width:${v/MAXSCALE*100}%">${v/MAXSCALE>0.09?K(v):""}</div>`).join("");
+  const arc=document.getElementById("ringArc");
+  arc.setAttribute("stroke-dasharray",C);
+  setTimeout(()=>arc.setAttribute("stroke-dashoffset",C*(1-CLOSED/PLAN)),150);
+})();
+
+(function(){
+  const s3=sum(D.filter(d=>d.s[1]==="3")), s2=sum(D.filter(d=>d.s[1]==="2"));
+  const rows=[
+    ["Hoy (cerrado)",CLOSED,"#2fd17a"],
+    ["+ Commit",CLOSED+COMMIT,"#00a1e0"],
+    ["+ Best Case",CLOSED+COMMIT+BEST,"#9b7bff"],
+    ["+ Etapa 03",CLOSED+COMMIT+BEST+s3,"#4fc8f5"],
+    ["Forecast ponderado",CLOSED+COMMIT*.9+BEST*.5+s3*.3+s2*.15,"#ffb648"],
+    ["Todo el pipeline (100% win)",CLOSED+OPEN,"#2fd17a"]
+  ];
+  document.getElementById("scen").innerHTML=rows.map(([n,v,c])=>{
+    const p=v/PLAN*100;
+    return `<div class="sc"><div class="name">${n}</div>
+      <div class="bar"><div class="fill" style="width:${Math.min(p,100)}%;background:linear-gradient(90deg,${c},${c}aa)"></div></div>
+      <div class="val">${K(v)}</div>
+      <div class="pct" style="color:${p>=100?'#2fd17a':p>=70?'#ffb648':'#e8eef9'}">${p.toFixed(1)}%</div></div>`;
+  }).join("");
+})();
+
+(function(){
+  const st={};D.forEach(d=>st[d.s]=(st[d.s]||0)+d.m);
+  const e=Object.entries(st).sort((a,b)=>b[0].localeCompare(a[0]));
+  const mx=Math.max(...e.map(x=>x[1]));
+  const col={"05":"#2fd17a","04":"#9b7bff","03":"#4fc8f5","02":"#33456b"};
+  document.getElementById("funnel").innerHTML=e.map(([k,v])=>{
+    const code=k.slice(0,2), n=D.filter(d=>d.s===k).length;
+    return `<div class="fnrow"><div class="lb">${code} · ${k.slice(5)}</div>
+      <div class="fnbar" style="width:${Math.max(v/mx*100,6)}%;background:${col[code]};color:${code==="02"?"#c3d3ea":"#04121f"}">${K(v)} · ${n}</div></div>`;
+  }).join("");
+})();
+
+(function(){
+  const m={};D.forEach(d=>{const k=d.d.slice(0,7);m[k]=(m[k]||0)+d.m});
+  const e=Object.entries(m).sort(), mx=Math.max(...e.map(x=>x[1]));
+  const lbl={"2026-09":"Sep 26","2026-10":"Oct 26","2026-11":"Nov 26","2026-12":"Dic 26","2027-01":"Ene 27"};
+  document.getElementById("timeline").innerHTML=e.map(([k,v])=>
+    `<div class="tlc"><div class="tlb" style="height:${v/mx*82}%"><span>${K(v)}</span></div><small>${lbl[k]||k}</small></div>`).join("");
+})();
+
+(function(){
+  const a={};D.forEach(d=>a[d.a]=(a[d.a]||0)+d.m);
+  const e=Object.entries(a).sort((x,y)=>y[1]-x[1]).slice(0,8), mx=e[0][1];
+  document.getElementById("accts").innerHTML=e.map(([k,v])=>
+    `<div class="fnrow"><div class="lb" style="width:245px">${k}</div>
+     <div class="fnbar" style="width:${v/mx*100}%;background:linear-gradient(90deg,#00a1e0,#9b7bff)">${K(v)}</div></div>`).join("");
+})();
+
+const sel=new Set();
+function render(){
+  document.getElementById("tbody").innerHTML=D.map((d,i)=>{
+    const t=d.c==="Best Case"?"Best":d.c;
+    return `<tr><td><input type="checkbox" ${sel.has(i)?"checked":""} onchange="tog(${i})"></td>
+      <td>${d.n}</td><td style="color:var(--mut)">${d.a}</td>
+      <td class="num">$${d.m.toLocaleString("en-US")}</td>
+      <td style="color:var(--mut);font-size:12px">${d.s.slice(0,2)} · ${d.s.slice(5)}</td>
+      <td><span class="tag t-${t}">${d.c}</span></td>
+      <td style="color:var(--mut);font-variant-numeric:tabular-nums">${d.d}</td></tr>`;
+  }).join("");
+  const add=[...sel].reduce((t,i)=>t+D[i].m,0);
+  const tot=CLOSED+add, pct=tot/PLAN*100, gap=Math.max(PLAN-tot,0);
+  const st=document.getElementById("simTotal");
+  st.textContent=K(tot);
+  st.style.color=pct>=100?"#2fd17a":pct>=70?"#ffb648":"#e8eef9";
+  document.getElementById("simPct").textContent=pct.toFixed(1)+"% del plan"+(pct>=100?" 🎯 ¡llegaste!":"");
+  const g=document.getElementById("simGap");
+  g.textContent=gap===0?"$0":K(gap); g.className="simnum "+(gap===0?"up":"warn");
+  document.getElementById("simGapPct").textContent=(gap/PLAN*100).toFixed(1)+"% pendiente";
+  document.getElementById("simCount").textContent=sel.size;
+  document.getElementById("ringArc").setAttribute("stroke-dashoffset",C*(1-Math.min(pct/100,1)));
+  document.getElementById("ringPct").textContent=pct.toFixed(1)+"%";
+}
+function tog(i){sel.has(i)?sel.delete(i):sel.add(i);render();}
+function preset(p){
+  sel.clear();
+  D.forEach((d,i)=>{
+    if(p==="all")sel.add(i);
+    else if(p==="commit"&&d.c==="Commit")sel.add(i);
+    else if(p==="cb"&&d.c!=="Pipeline")sel.add(i);
+    else if(p==="q3q4"&&d.d<"2027-01-01")sel.add(i);
+  });
+  if(p==="min"){let need=PLAN-CLOSED;
+    D.map((d,i)=>({i,m:d.m})).sort((a,b)=>b.m-a.m).forEach(o=>{if(need>0){sel.add(o.i);need-=o.m;}});}
+  const notes={none:"",commit:"Solo lo comprometido a 30-sep.",cb:"Todo lo avanzado (etapas 04 y 05).",
+    q3q4:"Todo lo que cierra en 2026.",min:"Menor número de deals que llega al 100% (por tamaño).",all:"Win rate del 100% — escenario teórico."};
+  document.getElementById("filterNote").textContent=notes[p]||"";
+  render();
+}
+window.tog=tog; window.preset=preset;
+render();
+</script>
+</body>
+</html>
